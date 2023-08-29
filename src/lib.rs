@@ -1,1 +1,1 @@
-pub mod greeter;
+pub mod greeter_service;

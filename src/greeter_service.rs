@@ -20,14 +20,14 @@ impl Greeting {
 }
 
 #[derive(Eq, Hash, PartialEq, Debug, Clone)]
-pub struct Friend {
+pub struct FriendData {
     name: String,
     surname: String,
     birthdate: NaiveDate,
     email: String,
 }
 
-impl Friend {
+impl FriendData {
     pub fn new(name: &str, surname: &str, birthdate: NaiveDate, email: &str) -> Self {
         Self {
             name: name.to_owned(),
@@ -39,7 +39,7 @@ impl Friend {
 }
 
 pub trait FriendsGateway {
-    fn get_friends(&self) -> Vec<Friend>;
+    fn get_friends(&self) -> Vec<FriendData>;
 }
 
 pub trait GreetingsSender {
@@ -50,8 +50,54 @@ pub trait Calendar {
     fn today(&self) -> NaiveDate;
 }
 
-pub struct GreeterService {
+#[derive(Clone)]
+pub(crate) struct Friend {
+    name: String,
+    surname: String,
+    birthdate: NaiveDate,
+    email: String,
+}
+
+impl Friend {
+    fn from(friend_data: &FriendData) -> Self {
+      Self {
+        name: friend_data.name.to_owned(),
+        surname: friend_data.surname.to_owned(),
+        birthdate: friend_data.birthdate.to_owned(),
+        email: friend_data.email.to_owned(),
+    }
+    }
+    
+    fn is_birthday(&self, date: NaiveDate) -> bool {
+        let birthday = self.birthdate;
+        birthday.month() == date.month() && self.birthdate.day() == date.day()
+            || date.month() == 2
+                && date.day() == 28
+                && birthday.month() == 2
+                && birthday.day() == 29
+    }
+}
+
+pub(crate) struct FriendsRepository {
     pub(crate) friends_gateway: Rc<dyn FriendsGateway>,
+}
+
+impl FriendsRepository {
+    pub fn new(friends_gateway: Rc<impl FriendsGateway + 'static>) -> Self {
+        Self { friends_gateway }
+    }
+
+    fn get_all(&self) -> Vec<Friend> {
+        self.friends_gateway
+            .get_friends()
+            .iter()
+            .map(Friend::from )
+            .collect()
+    }
+}
+
+pub struct GreeterService {
+    pub(crate) friends_repository: FriendsRepository,
     pub(crate) calendar: Rc<dyn Calendar>,
     pub(crate) greetings_sender: Rc<dyn GreetingsSender>,
 }
@@ -63,30 +109,28 @@ impl GreeterService {
         greetings_sender: Rc<impl GreetingsSender + 'static>,
     ) -> Self {
         Self {
-            friends_gateway,
+            friends_repository: FriendsRepository::new(friends_gateway),
             calendar,
             greetings_sender,
         }
     }
 
     pub fn run(&self) {
-        let friends = self.friends_gateway.get_friends();
-        let check_birthday = |f: &&Friend| Self::is_birthday(f, self.calendar.today());
-        let greetings: Vec<Greeting> = friends
+        let friends_celebrating_birthdays = self.get_friends_celebrating_birthday();
+        let greetings: Vec<Greeting> = friends_celebrating_birthdays
             .iter()
-            .filter(check_birthday)
             .map(|f| Greeting::new(&f.name, &f.surname, &f.email))
             .collect();
         self.greetings_sender.send(greetings);
     }
 
-    fn is_birthday(friend: &Friend, date: NaiveDate) -> bool {
-        let birthday = &friend.birthdate;
-        birthday.month() == date.month() && friend.birthdate.day() == date.day()
-            || date.month() == 2
-                && date.day() == 28
-                && birthday.month() == 2
-                && birthday.day() == 29
+    fn get_friends_celebrating_birthday(&self) -> Vec<Friend> {
+        self.friends_repository
+            .get_all()
+            .iter()
+            .filter(|f| f.is_birthday(self.calendar.today()))
+            .cloned()
+            .collect()
     }
 }
 
@@ -99,7 +143,7 @@ mod tests {
     use super::*;
 
     struct FriendsGatewayTestDouble {
-        stubbed_friends: RefCell<Vec<Friend>>,
+        stubbed_friends: RefCell<Vec<FriendData>>,
     }
 
     impl FriendsGatewayTestDouble {
@@ -109,7 +153,7 @@ mod tests {
             }
         }
 
-        fn stub_friends(&self, friends: Vec<Friend>) {
+        fn stub_friends(&self, friends: Vec<FriendData>) {
             self.stubbed_friends.replace(friends);
         }
 
@@ -119,7 +163,7 @@ mod tests {
     }
 
     impl FriendsGateway for FriendsGatewayTestDouble {
-        fn get_friends(&self) -> Vec<Friend> {
+        fn get_friends(&self) -> Vec<FriendData> {
             self.stubbed_friends.borrow().clone()
         }
     }
@@ -172,13 +216,13 @@ mod tests {
     fn send_a_greeting_to_all_the_friends_who_celebrate_their_birthday_today() {
         let friends_gateway = Rc::new(FriendsGatewayTestDouble::new());
         friends_gateway.stub_friends(vec![
-            Friend::new(
+            FriendData::new(
                 "Mario",
                 "Franco",
                 NaiveDate::from_ymd_opt(1970, 8, 24).unwrap(),
                 "mario-franco@email.com",
             ),
-            Friend::new(
+            FriendData::new(
                 "Carla",
                 "Sandri",
                 NaiveDate::from_ymd_opt(1980, 8, 24).unwrap(),
@@ -210,13 +254,13 @@ mod tests {
     fn send_no_greetings_if_no_friend_celebrates_their_birthday_today() {
         let friends_gateway = Rc::new(FriendsGatewayTestDouble::new());
         friends_gateway.stub_friends(vec![
-            Friend::new(
+            FriendData::new(
                 "Mario",
                 "Franco",
                 NaiveDate::from_ymd_opt(1970, 8, 14).unwrap(),
                 "mario-franco@email.com",
             ),
-            Friend::new(
+            FriendData::new(
                 "Carla",
                 "Sandri",
                 NaiveDate::from_ymd_opt(1980, 8, 12).unwrap(),
@@ -242,13 +286,13 @@ mod tests {
     fn send_greetings_only_to_friends_who_celebrate_their_birthday_today() {
         let friends_gateway = Rc::new(FriendsGatewayTestDouble::new());
         friends_gateway.stub_friends(vec![
-            Friend::new(
+            FriendData::new(
                 "Mario",
                 "Franco",
                 NaiveDate::from_ymd_opt(1970, 8, 14).unwrap(),
                 "mario-franco@email.com",
             ),
-            Friend::new(
+            FriendData::new(
                 "Carla",
                 "Sandri",
                 NaiveDate::from_ymd_opt(1980, 6, 12).unwrap(),
@@ -295,13 +339,13 @@ mod tests {
     ) {
         let friends_gateway = Rc::new(FriendsGatewayTestDouble::new());
         friends_gateway.stub_friends(vec![
-            Friend::new(
+            FriendData::new(
                 "Mario",
                 "Franco",
                 NaiveDate::from_ymd_opt(1999, 2, 28).unwrap(),
                 "mario-franco@email.com",
             ),
-            Friend::new(
+            FriendData::new(
                 "Carla",
                 "Sandri",
                 NaiveDate::from_ymd_opt(2000, 2, 29).unwrap(),
