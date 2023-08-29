@@ -1,99 +1,15 @@
+use chrono::NaiveDate;
 use std::rc::Rc;
 
-use chrono::{Datelike, NaiveDate};
-
-#[derive(Eq, Hash, PartialEq, Debug, Clone)]
-pub struct Greeting {
-    pub friend_name: String,
-    pub friend_surname: String,
-    pub email: String,
-}
-
-impl Greeting {
-    pub fn new(friend_name: &str, friend_surname: &str, email: &str) -> Self {
-        Self {
-            friend_name: friend_name.to_owned(),
-            friend_surname: friend_surname.to_owned(),
-            email: email.to_owned(),
-        }
-    }
-}
-
-#[derive(Eq, Hash, PartialEq, Debug, Clone)]
-pub struct FriendData {
-    name: String,
-    surname: String,
-    birthdate: NaiveDate,
-    email: String,
-}
-
-impl FriendData {
-    pub fn new(name: &str, surname: &str, birthdate: NaiveDate, email: &str) -> Self {
-        Self {
-            name: name.to_owned(),
-            surname: surname.to_owned(),
-            birthdate,
-            email: email.to_owned(),
-        }
-    }
-}
-
-pub trait FriendsGateway {
-    fn get_friends(&self) -> Vec<FriendData>;
-}
-
-pub trait GreetingsSender {
-    fn send(&self, greetings: Vec<Greeting>);
-}
+use crate::{
+    friends::{
+        friend::Friend, friends_gateway::FriendsGateway, friends_repository::FriendsRepository,
+    },
+    greetings::{greeting::Greeting, greetings_sender::GreetingsSender},
+};
 
 pub trait Calendar {
     fn today(&self) -> NaiveDate;
-}
-
-#[derive(Clone)]
-pub(crate) struct Friend {
-    name: String,
-    surname: String,
-    birthdate: NaiveDate,
-    email: String,
-}
-
-impl Friend {
-    fn from(friend_data: &FriendData) -> Self {
-      Self {
-        name: friend_data.name.to_owned(),
-        surname: friend_data.surname.to_owned(),
-        birthdate: friend_data.birthdate.to_owned(),
-        email: friend_data.email.to_owned(),
-    }
-    }
-    
-    fn is_birthday(&self, date: NaiveDate) -> bool {
-        let birthday = self.birthdate;
-        birthday.month() == date.month() && self.birthdate.day() == date.day()
-            || date.month() == 2
-                && date.day() == 28
-                && birthday.month() == 2
-                && birthday.day() == 29
-    }
-}
-
-pub(crate) struct FriendsRepository {
-    pub(crate) friends_gateway: Rc<dyn FriendsGateway>,
-}
-
-impl FriendsRepository {
-    pub fn new(friends_gateway: Rc<impl FriendsGateway + 'static>) -> Self {
-        Self { friends_gateway }
-    }
-
-    fn get_all(&self) -> Vec<Friend> {
-        self.friends_gateway
-            .get_friends()
-            .iter()
-            .map(Friend::from )
-            .collect()
-    }
 }
 
 pub struct GreeterService {
@@ -117,11 +33,7 @@ impl GreeterService {
 
     pub fn run(&self) {
         let friends_celebrating_birthdays = self.get_friends_celebrating_birthday();
-        let greetings: Vec<Greeting> = friends_celebrating_birthdays
-            .iter()
-            .map(|f| Greeting::new(&f.name, &f.surname, &f.email))
-            .collect();
-        self.greetings_sender.send(greetings);
+        self.send_greetings(friends_celebrating_birthdays);
     }
 
     fn get_friends_celebrating_birthday(&self) -> Vec<Friend> {
@@ -132,15 +44,22 @@ impl GreeterService {
             .cloned()
             .collect()
     }
+
+    fn send_greetings(&self, friends: Vec<Friend>) {
+        let greetings: Vec<Greeting> = friends
+            .iter()
+            .map(|f| Greeting::new(&f.name, &f.surname, &f.email))
+            .collect();
+        self.greetings_sender.send(greetings);
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::cell::RefCell;
-
-    use chrono::{NaiveDate, Utc};
-
     use super::*;
+    use crate::friends::friend_data::FriendData;
+    use chrono::{NaiveDate, Utc};
+    use std::cell::RefCell;
 
     struct FriendsGatewayTestDouble {
         stubbed_friends: RefCell<Vec<FriendData>>,
