@@ -81,7 +81,12 @@ impl GreeterService {
     }
 
     fn is_birthday(friend: &Friend, date: NaiveDate) -> bool {
-        friend.birthdate.month() == date.month() && friend.birthdate.day() == date.day()
+        let birthday = &friend.birthdate;
+        birthday.month() == date.month() && friend.birthdate.day() == date.day()
+            || date.month() == 2
+                && date.day() == 28
+                && birthday.month() == 2
+                && birthday.day() == 29
     }
 }
 
@@ -285,9 +290,42 @@ mod tests {
         assert_eq!(sent_greetings, Vec::new())
     }
 
-    // #[test]
-    // fn during_leap_years_send_greetings_on_feb_29th_to_friends_who_celebrate_their_birthday_that_day() {}
+    #[test]
+    fn during_not_leap_years_send_greetings_on_feb_28th_to_friends_who_celebrate_their_birthday_on_feb_29th(
+    ) {
+        let friends_gateway = Rc::new(FriendsGatewayTestDouble::new());
+        friends_gateway.stub_friends(vec![
+            Friend::new(
+                "Mario",
+                "Franco",
+                NaiveDate::from_ymd_opt(1999, 2, 28).unwrap(),
+                "mario-franco@email.com",
+            ),
+            Friend::new(
+                "Carla",
+                "Sandri",
+                NaiveDate::from_ymd_opt(2000, 2, 29).unwrap(),
+                "carla-sandri@email.com",
+            ),
+        ]);
+        let calendar = Rc::new(CalendarTestDouble::new());
+        calendar.stub_today(NaiveDate::from_ymd_opt(2023, 2, 28).unwrap());
+        let greetings_sender = Rc::new(GreetingsSenderTestDouble::new());
 
-    // #[test]
-    // fn during_not_leap_years_send_greetings_on_feb_28th_to_friends_who_celebrate_their_birthday_on_feb_29th() {}
+        let greeter = GreeterService::new(
+            Rc::clone(&friends_gateway),
+            calendar,
+            Rc::clone(&greetings_sender),
+        );
+        greeter.run();
+
+        let sent_greetings = greetings_sender.spied_sent_greetings();
+        assert_eq!(
+            sent_greetings,
+            vec![
+                Greeting::new("Mario", "Franco", "mario-franco@email.com"),
+                Greeting::new("Carla", "Sandri", "carla-sandri@email.com")
+            ]
+        )
+    }
 }
