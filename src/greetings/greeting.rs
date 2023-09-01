@@ -1,4 +1,3 @@
-
 #[derive(Eq, Hash, PartialEq, Debug, Clone)]
 pub struct Greeting {
     pub friend_name: String,

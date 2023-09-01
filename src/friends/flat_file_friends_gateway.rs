@@ -3,8 +3,8 @@ use std::{
     io::{BufRead, BufReader},
 };
 
-use chrono::NaiveDate;
 use super::{friend_data::FriendData, friends_gateway::FriendsGateway};
+use chrono::NaiveDate;
 
 pub struct FlatFileFriendsGateway {
     file: File,
