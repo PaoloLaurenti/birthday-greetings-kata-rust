@@ -60,4 +60,12 @@ fn send_greetings_as_email() {
 }
 
 #[test]
-fn does_not_send_anything_when_asked_to_send_no_greeting() {}
+fn does_not_send_anything_when_asked_to_send_no_greeting() {
+    let mailer_test_double = Rc::new(MailerTestDouble::new());
+    let email_greetings_sender = EmailGreetingsSender::new(Rc::clone(&mailer_test_double));
+
+    email_greetings_sender.send(Vec::new());
+
+    let emails = mailer_test_double.spied_emails_to_send();
+    assert_eq!(emails, Vec::new())
+}
