@@ -12,7 +12,6 @@ fn get_friends_from_flat_file() -> Result<()> {
     writeln!(temp_file, "last_name, first_name, date_of_birth, email")?;
     writeln!(temp_file, "Franchi, Franca, 24/08/1970, franca@franchi.com")?;
     writeln!(temp_file, "Germi, Mario, 11/12/1980, mario@germi.com")?;
-    dbg!(&temp_file);
     let flat_file_friends_gateway = FlatFileFriendsGateway::new(temp_file.reopen()?);
 
     let friends = flat_file_friends_gateway.get_friends();
@@ -34,5 +33,17 @@ fn get_friends_from_flat_file() -> Result<()> {
             )
         ]
     );
+    Ok(())
+}
+
+#[test]
+fn get_no_friends_from_empty_flat_file() -> Result<()> {
+    let mut temp_file = NamedTempFile::new()?;
+    writeln!(temp_file, "last_name, first_name, date_of_birth, email")?;
+    let flat_file_friends_gateway = FlatFileFriendsGateway::new(temp_file.reopen()?);
+
+    let friends = flat_file_friends_gateway.get_friends();
+
+    assert_eq!(friends, Vec::new());
     Ok(())
 }
