@@ -6,31 +6,35 @@ use birthday_greetings_kata_rust::greetings::{
     greetings_sender::GreetingsSender,
 };
 
-struct MailerTestDouble {
-    sent_emails: RefCell<Vec<Email>>,
+struct TestDouble<T: Clone> {
+    spied_values: RefCell<Vec<T>>,
 }
 
-impl MailerTestDouble {
+impl<T: Clone> TestDouble<T> {
     fn new() -> Self {
         Self {
-            sent_emails: RefCell::new(Vec::new()),
+          spied_values: RefCell::new(Vec::new()),
         }
     }
 
-    fn spied_emails_to_send(&self) -> Vec<Email> {
-        self.sent_emails.borrow().clone()
+    fn spied_values(&self) -> Vec<T> {
+        self.spied_values.borrow().clone()
+    }
+
+    fn spy(&self, values: Vec<T>) {
+        self.spied_values.borrow_mut().extend(values)
     }
 }
 
-impl Mailer for MailerTestDouble {
+impl Mailer for TestDouble<Email> {
     fn send(&self, emails: Vec<Email>) {
-        self.sent_emails.borrow_mut().extend(emails)
+        self.spy(emails)
     }
 }
 
 #[test]
 fn send_greetings_as_email() {
-    let mailer_test_double = Rc::new(MailerTestDouble::new());
+    let mailer_test_double = Rc::new(TestDouble::<Email>::new());
     let email_greetings_sender = EmailGreetingsSender::new(Rc::clone(&mailer_test_double));
 
     let greetings = vec![
@@ -39,7 +43,7 @@ fn send_greetings_as_email() {
     ];
     email_greetings_sender.send(greetings);
 
-    let emails = mailer_test_double.spied_emails_to_send();
+    let emails = mailer_test_double.spied_values();
     assert_eq!(
         emails,
         vec![
