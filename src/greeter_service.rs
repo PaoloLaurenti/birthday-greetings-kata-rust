@@ -49,7 +49,7 @@ impl GreeterService {
         let greetings: Vec<Greeting> = friends
             .iter()
             .map(|f| {
-                Greeting::new_with_phone_number(
+                Greeting::new(
                     &f.name,
                     &f.surname,
                     &f.email,
@@ -172,18 +172,8 @@ mod tests {
         assert_eq!(
             sent_greetings,
             vec![
-                Greeting::new_with_phone_number(
-                    "Mario",
-                    "Franco",
-                    "mario-franco@email.com",
-                    "3331112224"
-                ),
-                Greeting::new_with_phone_number(
-                    "Carla",
-                    "Sandri",
-                    "carla-sandri@email.com",
-                    "3335556667"
-                )
+                Greeting::new("Mario", "Franco", "mario-franco@email.com", "3331112224"),
+                Greeting::new("Carla", "Sandri", "carla-sandri@email.com", "3335556667")
             ]
         )
     }
@@ -255,7 +245,7 @@ mod tests {
         let sent_greetings = greetings_sender.spied_sent_greetings();
         assert_eq!(
             sent_greetings,
-            vec![Greeting::new_with_phone_number(
+            vec![Greeting::new(
                 "Carla",
                 "Sandri",
                 "carla-sandri@email.com",
@@ -316,18 +306,8 @@ mod tests {
         assert_eq!(
             sent_greetings,
             vec![
-                Greeting::new_with_phone_number(
-                    "Mario",
-                    "Franco",
-                    "mario-franco@email.com",
-                    "3331112224"
-                ),
-                Greeting::new_with_phone_number(
-                    "Carla",
-                    "Sandri",
-                    "carla-sandri@email.com",
-                    "3335556667"
-                )
+                Greeting::new("Mario", "Franco", "mario-franco@email.com", "3331112224"),
+                Greeting::new("Carla", "Sandri", "carla-sandri@email.com", "3335556667")
             ]
         )
     }

@@ -20,7 +20,7 @@ impl GreetingsSender for SmsGreetingsSender {
             .map(|g| {
                 Sms::new(
                     "3334445551",
-                    (g.phone_number).as_ref().unwrap(),
+                    &g.phone_number,
                     format!("Happy birthday, dear {0}!", g.friend_name).as_str(),
                 )
             })

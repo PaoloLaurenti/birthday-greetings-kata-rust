@@ -33,8 +33,8 @@ fn send_greetings_as_sms() {
     let sms_greetings_sender = SmsGreetingsSender::new(Rc::clone(&sms_service_test_double));
 
     let greetings = vec![
-        Greeting::new_with_phone_number("Franco", "Franchi", "franco@franchi.com", "3398889990"),
-        Greeting::new_with_phone_number("Mary", "Doe", "mary@doe.com", "3396665559"),
+        Greeting::new("Franco", "Franchi", "franco@franchi.com", "3398889990"),
+        Greeting::new("Mary", "Doe", "mary@doe.com", "3396665559"),
     ];
     sms_greetings_sender.send(greetings);
 
