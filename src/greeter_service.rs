@@ -48,7 +48,14 @@ impl GreeterService {
     fn send_greetings(&self, friends: Vec<Friend>) {
         let greetings: Vec<Greeting> = friends
             .iter()
-            .map(|f| Greeting::new(&f.name, &f.surname, &f.email))
+            .map(|f| {
+                Greeting::new_with_phone_number(
+                    &f.name,
+                    &f.surname,
+                    &f.email,
+                    f.phone_number.clone().unwrap().as_ref(),
+                )
+            })
             .collect();
         self.greetings_sender.send(greetings);
     }
@@ -135,17 +142,19 @@ mod tests {
     fn send_a_greeting_to_all_the_friends_who_celebrate_their_birthday_today() {
         let friends_gateway = Rc::new(FriendsGatewayTestDouble::new());
         friends_gateway.stub_friends(vec![
-            FriendData::new(
+            FriendData::new_with_phone_number(
                 "Mario",
                 "Franco",
                 NaiveDate::from_ymd_opt(1970, 8, 24).unwrap(),
                 "mario-franco@email.com",
+                "3331112224",
             ),
-            FriendData::new(
+            FriendData::new_with_phone_number(
                 "Carla",
                 "Sandri",
                 NaiveDate::from_ymd_opt(1980, 8, 24).unwrap(),
                 "carla-sandri@email.com",
+                "3335556667",
             ),
         ]);
         let calendar = Rc::new(CalendarTestDouble::new());
@@ -163,8 +172,18 @@ mod tests {
         assert_eq!(
             sent_greetings,
             vec![
-                Greeting::new("Mario", "Franco", "mario-franco@email.com"),
-                Greeting::new("Carla", "Sandri", "carla-sandri@email.com")
+                Greeting::new_with_phone_number(
+                    "Mario",
+                    "Franco",
+                    "mario-franco@email.com",
+                    "3331112224"
+                ),
+                Greeting::new_with_phone_number(
+                    "Carla",
+                    "Sandri",
+                    "carla-sandri@email.com",
+                    "3335556667"
+                )
             ]
         )
     }
@@ -173,17 +192,19 @@ mod tests {
     fn send_no_greetings_if_no_friend_celebrates_their_birthday_today() {
         let friends_gateway = Rc::new(FriendsGatewayTestDouble::new());
         friends_gateway.stub_friends(vec![
-            FriendData::new(
+            FriendData::new_with_phone_number(
                 "Mario",
                 "Franco",
                 NaiveDate::from_ymd_opt(1970, 8, 14).unwrap(),
                 "mario-franco@email.com",
+                "3331112224",
             ),
-            FriendData::new(
+            FriendData::new_with_phone_number(
                 "Carla",
                 "Sandri",
                 NaiveDate::from_ymd_opt(1980, 8, 12).unwrap(),
                 "carla-sandri@email.com",
+                "3335556667",
             ),
         ]);
         let calendar = Rc::new(CalendarTestDouble::new());
@@ -205,17 +226,19 @@ mod tests {
     fn send_greetings_only_to_friends_who_celebrate_their_birthday_today() {
         let friends_gateway = Rc::new(FriendsGatewayTestDouble::new());
         friends_gateway.stub_friends(vec![
-            FriendData::new(
+            FriendData::new_with_phone_number(
                 "Mario",
                 "Franco",
                 NaiveDate::from_ymd_opt(1970, 8, 14).unwrap(),
                 "mario-franco@email.com",
+                "3331112224",
             ),
-            FriendData::new(
+            FriendData::new_with_phone_number(
                 "Carla",
                 "Sandri",
                 NaiveDate::from_ymd_opt(1980, 6, 12).unwrap(),
                 "carla-sandri@email.com",
+                "3335556667",
             ),
         ]);
         let calendar = Rc::new(CalendarTestDouble::new());
@@ -232,7 +255,12 @@ mod tests {
         let sent_greetings = greetings_sender.spied_sent_greetings();
         assert_eq!(
             sent_greetings,
-            vec![Greeting::new("Carla", "Sandri", "carla-sandri@email.com")]
+            vec![Greeting::new_with_phone_number(
+                "Carla",
+                "Sandri",
+                "carla-sandri@email.com",
+                "3335556667"
+            )]
         )
     }
 
@@ -258,17 +286,19 @@ mod tests {
     ) {
         let friends_gateway = Rc::new(FriendsGatewayTestDouble::new());
         friends_gateway.stub_friends(vec![
-            FriendData::new(
+            FriendData::new_with_phone_number(
                 "Mario",
                 "Franco",
                 NaiveDate::from_ymd_opt(1999, 2, 28).unwrap(),
                 "mario-franco@email.com",
+                "3331112224",
             ),
-            FriendData::new(
+            FriendData::new_with_phone_number(
                 "Carla",
                 "Sandri",
                 NaiveDate::from_ymd_opt(2000, 2, 29).unwrap(),
                 "carla-sandri@email.com",
+                "3335556667",
             ),
         ]);
         let calendar = Rc::new(CalendarTestDouble::new());
@@ -286,8 +316,18 @@ mod tests {
         assert_eq!(
             sent_greetings,
             vec![
-                Greeting::new("Mario", "Franco", "mario-franco@email.com"),
-                Greeting::new("Carla", "Sandri", "carla-sandri@email.com")
+                Greeting::new_with_phone_number(
+                    "Mario",
+                    "Franco",
+                    "mario-franco@email.com",
+                    "3331112224"
+                ),
+                Greeting::new_with_phone_number(
+                    "Carla",
+                    "Sandri",
+                    "carla-sandri@email.com",
+                    "3335556667"
+                )
             ]
         )
     }

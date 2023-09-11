@@ -34,8 +34,8 @@ fn send_greetings_as_email() {
     let email_greetings_sender = EmailGreetingsSender::new(Rc::clone(&mailer_test_double));
 
     let greetings = vec![
-        Greeting::new("Franco", "Franchi", "franco@franchi.com"),
-        Greeting::new("Mary", "Doe", "mary@doe.com"),
+        Greeting::new_with_phone_number("Franco", "Franchi", "franco@franchi.com", "3334445550"),
+        Greeting::new_with_phone_number("Mary", "Doe", "mary@doe.com", "3336667770"),
     ];
     email_greetings_sender.send(greetings);
 
