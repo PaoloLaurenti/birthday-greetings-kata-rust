@@ -24,14 +24,14 @@ impl FriendsGateway for FlatFileFriendsGateway {
             .skip(1)
             .map(|l| {
                 let friend_line = l.unwrap();
-                dbg!(&friend_line);
                 let friend_data: Vec<&str> = friend_line.trim().split(',').collect();
                 let surname = friend_data[0].trim();
                 let name = friend_data[1].trim();
                 let birth_date =
                     NaiveDate::parse_from_str(friend_data[2].trim(), "%d/%m/%Y").unwrap();
                 let email = friend_data[3].trim();
-                FriendData::new(name, surname, birth_date, email)
+                let phone_number = friend_data[4].trim();
+                FriendData::new_with_phone_number(name, surname, birth_date, email, phone_number)
             })
             .collect()
     }
