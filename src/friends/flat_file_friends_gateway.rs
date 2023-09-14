@@ -31,7 +31,7 @@ impl FriendsGateway for FlatFileFriendsGateway {
                     NaiveDate::parse_from_str(friend_data[2].trim(), "%d/%m/%Y").unwrap();
                 let email = friend_data[3].trim();
                 let phone_number = friend_data[4].trim();
-                FriendData::new_with_phone_number(name, surname, birth_date, email, phone_number)
+                FriendData::new(name, surname, birth_date, email, phone_number)
             })
             .collect()
     }

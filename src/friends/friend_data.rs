@@ -6,21 +6,11 @@ pub struct FriendData {
     pub surname: String,
     pub birthdate: NaiveDate,
     pub email: String,
-    pub phone_number: Option<String>,
+    pub phone_number: String,
 }
 
 impl FriendData {
-    pub fn new(name: &str, surname: &str, birthdate: NaiveDate, email: &str) -> Self {
-        Self {
-            name: name.to_owned(),
-            surname: surname.to_owned(),
-            birthdate,
-            email: email.to_owned(),
-            phone_number: None,
-        }
-    }
-
-    pub fn new_with_phone_number(
+    pub fn new(
         name: &str,
         surname: &str,
         birthdate: NaiveDate,
@@ -32,7 +22,7 @@ impl FriendData {
             surname: surname.to_owned(),
             birthdate,
             email: email.to_owned(),
-            phone_number: Some(phone_number.to_owned()),
+            phone_number: phone_number.to_owned(),
         }
     }
 }

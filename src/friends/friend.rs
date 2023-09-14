@@ -8,7 +8,7 @@ pub(crate) struct Friend {
     pub(crate) surname: String,
     pub(crate) birthdate: NaiveDate,
     pub(crate) email: String,
-    pub(crate) phone_number: Option<String>,
+    pub(crate) phone_number: String,
 }
 
 impl Friend {
