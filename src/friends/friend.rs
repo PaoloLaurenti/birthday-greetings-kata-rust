@@ -22,6 +22,16 @@ impl Friend {
         }
     }
 
+    pub(crate) fn to(friend: &Self) -> FriendData {
+        FriendData::new(
+            &friend.name,
+            &friend.surname,
+            friend.birthdate,
+            &friend.email,
+            &friend.phone_number,
+        )
+    }
+
     pub(crate) fn is_it_their_birthday(&self, date: NaiveDate) -> bool {
         let birthday = self.birthdate;
         birthday.month() == date.month() && self.birthdate.day() == date.day()

@@ -3,7 +3,8 @@ use std::rc::Rc;
 
 use crate::{
     friends::{
-        friend::Friend, friends_gateway::FriendsGateway, friends_repository::FriendsRepository,
+        friend::Friend, friend_data::FriendData, friends_gateway::FriendsGateway,
+        friends_repository::FriendsRepository,
     },
     greetings::{greeting::Greeting, greetings_sender::GreetingsSender},
 };
@@ -12,10 +13,18 @@ pub trait Calendar {
     fn today(&self) -> NaiveDate;
 }
 
+pub trait Observer {
+    fn observe_friends_celebrating_their_birthdays(&self, _friends: Vec<FriendData>) {}
+}
+
+pub struct DummyObserver {}
+impl Observer for DummyObserver {}
+
 pub struct GreeterService {
     pub(crate) friends_repository: FriendsRepository,
     pub(crate) calendar: Rc<dyn Calendar>,
     pub(crate) greetings_sender: Rc<dyn GreetingsSender>,
+    pub(crate) observer: Rc<dyn Observer>,
 }
 
 impl GreeterService {
@@ -28,6 +37,7 @@ impl GreeterService {
             friends_repository: FriendsRepository::new(friends_gateway),
             calendar,
             greetings_sender,
+            observer: Rc::new(DummyObserver {}),
         }
     }
 
@@ -37,12 +47,19 @@ impl GreeterService {
     }
 
     fn get_friends_celebrating_birthday(&self) -> Vec<Friend> {
-        self.friends_repository
+        let celebreting_friends: Vec<Friend> = self
+            .friends_repository
             .get_all()
             .iter()
             .filter(|f| f.is_it_their_birthday(self.calendar.today()))
             .cloned()
-            .collect()
+            .collect();
+
+        let celebreting_friends_data = celebreting_friends.iter().map(Friend::to).collect();
+        self.observer
+            .observe_friends_celebrating_their_birthdays(celebreting_friends_data);
+
+        celebreting_friends
     }
 
     fn send_greetings(&self, friends: Vec<Friend>) {
@@ -51,6 +68,10 @@ impl GreeterService {
             .map(|f| Greeting::new(&f.name, &f.surname, &f.email, &f.phone_number))
             .collect();
         self.greetings_sender.send(greetings);
+    }
+
+    pub fn configure_observer(&mut self, observer: Rc<impl Observer + 'static>) {
+        self.observer = observer
     }
 }
 
@@ -128,6 +149,28 @@ mod tests {
     impl GreetingsSender for GreetingsSenderTestDouble {
         fn send(&self, greetings: Vec<Greeting>) {
             self.sent_greetings.borrow_mut().extend(greetings)
+        }
+    }
+
+    struct ObserverTestDouble {
+        observed_friends: RefCell<Vec<FriendData>>,
+    }
+
+    impl ObserverTestDouble {
+        fn new() -> Self {
+            Self {
+                observed_friends: RefCell::new(Vec::new()),
+            }
+        }
+
+        fn spied_observed_friends(&self) -> Vec<FriendData> {
+            self.observed_friends.borrow().clone()
+        }
+    }
+
+    impl Observer for ObserverTestDouble {
+        fn observe_friends_celebrating_their_birthdays(&self, friends: Vec<FriendData>) {
+            self.observed_friends.borrow_mut().extend(friends)
         }
     }
 
@@ -302,6 +345,51 @@ mod tests {
                 Greeting::new("Mario", "Franco", "mario-franco@email.com", "3331112224"),
                 Greeting::new("Carla", "Sandri", "carla-sandri@email.com", "3335556667")
             ]
+        )
+    }
+
+    #[test]
+    fn observe_friends_celebrating_their_birthdays() {
+        let friends_gateway = Rc::new(FriendsGatewayTestDouble::new());
+        friends_gateway.stub_friends(vec![
+            FriendData::new(
+                "Mario",
+                "Franco",
+                NaiveDate::from_ymd_opt(1970, 8, 14).unwrap(),
+                "mario-franco@email.com",
+                "3331112224",
+            ),
+            FriendData::new(
+                "Carla",
+                "Sandri",
+                NaiveDate::from_ymd_opt(1980, 6, 12).unwrap(),
+                "carla-sandri@email.com",
+                "3335556667",
+            ),
+        ]);
+        let calendar = Rc::new(CalendarTestDouble::new());
+        calendar.stub_today(NaiveDate::from_ymd_opt(2023, 6, 12).unwrap());
+        let greetings_sender = Rc::new(GreetingsSenderTestDouble::new());
+        let observer = Rc::new(ObserverTestDouble::new());
+        let mut greeter = GreeterService::new(
+            Rc::clone(&friends_gateway),
+            calendar,
+            Rc::clone(&greetings_sender),
+        );
+        greeter.configure_observer(Rc::clone(&observer));
+
+        greeter.run();
+
+        let notified_friends = observer.spied_observed_friends();
+        assert_eq!(
+            notified_friends,
+            vec![FriendData::new(
+                "Carla",
+                "Sandri",
+                NaiveDate::from_ymd_opt(1980, 6, 12).unwrap(),
+                "carla-sandri@email.com",
+                "3335556667",
+            )]
         )
     }
 }
