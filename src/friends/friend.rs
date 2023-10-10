@@ -22,7 +22,7 @@ impl Friend {
         }
     }
 
-    pub(crate) fn is_birthday(&self, date: NaiveDate) -> bool {
+    pub(crate) fn is_it_their_birthday(&self, date: NaiveDate) -> bool {
         let birthday = self.birthdate;
         birthday.month() == date.month() && self.birthdate.day() == date.day()
             || date.month() == 2

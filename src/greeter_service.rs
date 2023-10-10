@@ -40,7 +40,7 @@ impl GreeterService {
         self.friends_repository
             .get_all()
             .iter()
-            .filter(|f| f.is_birthday(self.calendar.today()))
+            .filter(|f| f.is_it_their_birthday(self.calendar.today()))
             .cloned()
             .collect()
     }
