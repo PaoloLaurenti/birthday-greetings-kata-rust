@@ -85,7 +85,10 @@ fn send_greetings_via_email_and_sms() -> Result<()> {
         temp_file,
         "Franchi, Franco, 24/08/1970, franco@franchi.com, 3398889990"
     )?;
-    writeln!(temp_file, "Germi, Mario, 11/12/1980, mario@germi.com, 3334442221")?;
+    writeln!(
+        temp_file,
+        "Germi, Mario, 11/12/1980, mario@germi.com, 3334442221"
+    )?;
     writeln!(temp_file, "Doe, Mary, 24/08/1982, mary@doe.com, 3396665559")?;
     let flat_file_friends_gateway = Rc::new(FlatFileFriendsGateway::new(temp_file.reopen()?));
     let fake_calendar = FakeCalendar::new(NaiveDate::from_ymd_opt(2023, 8, 24).unwrap());
