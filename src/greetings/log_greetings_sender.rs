@@ -1,23 +1,22 @@
-use std::rc::Rc;
-
 use log::{error, info};
+use std::rc::Rc;
 
 use super::{
     greeting::Greeting,
     greetings_sender::{GreetingsSender, SendGreetingsError},
 };
 
-pub struct LogGreeringsSender {
+pub struct LogGreetingsSender {
     greetings_sender: Rc<dyn GreetingsSender>,
 }
 
-impl LogGreeringsSender {
+impl LogGreetingsSender {
     pub fn new(greetings_sender: Rc<impl GreetingsSender + 'static>) -> Self {
         Self { greetings_sender }
     }
 }
 
-impl GreetingsSender for LogGreeringsSender {
+impl GreetingsSender for LogGreetingsSender {
     fn send(&self, _greetings: Vec<super::greeting::Greeting>) {}
 
     fn send2(&self, greetings: Vec<Greeting>) -> Result<(), SendGreetingsError> {
@@ -31,14 +30,12 @@ impl GreetingsSender for LogGreeringsSender {
             .filter(|g| no_sent_greetings.iter().all(|nsg| nsg.0 != **g))
             .for_each(|g| info!("Greeting sent to {} {}", g.friend_name, g.friend_surname));
 
-        no_sent_greetings
-            .iter()
-            .for_each(|g| {
-                error!(
-                    "Error sending greeting to {} {} - {}",
-                    g.0.friend_name, g.0.friend_surname, g.1.message
-                )
-            });
+        no_sent_greetings.iter().for_each(|g| {
+            error!(
+                "Error sending greeting to {} {} - {}",
+                g.0.friend_name, g.0.friend_surname, g.1.message
+            )
+        });
         send_result
     }
 }

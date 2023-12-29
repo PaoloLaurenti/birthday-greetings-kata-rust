@@ -36,9 +36,9 @@ fn log_friends_celebrating_their_birthdays() {
         );
         assert_eq!(captured_logs[0].level, Level::Info);
         assert_eq!(
-          captured_logs[1].body,
-          "Mario Verdi celebreting her birtday on 12/06"
-      );
-      assert_eq!(captured_logs[1].level, Level::Info);
+            captured_logs[1].body,
+            "Mario Verdi celebreting her birtday on 12/06"
+        );
+        assert_eq!(captured_logs[1].level, Level::Info);
     });
 }

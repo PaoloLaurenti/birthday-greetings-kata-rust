@@ -1,4 +1,3 @@
-
 use super::greeting::Greeting;
 
 pub trait GreetingsSender {
@@ -20,10 +19,12 @@ impl SendGreetingsError {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct SendSingleGreetingError{
-  pub message: String
+pub struct SendSingleGreetingError {
+    pub message: String,
 }
 
 impl SendSingleGreetingError {
-    pub fn new(message: String) -> Self { Self { message } }
+    pub fn new(message: String) -> Self {
+        Self { message }
+    }
 }

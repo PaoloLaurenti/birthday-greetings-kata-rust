@@ -3,7 +3,7 @@ use std::{cell::RefCell, rc::Rc};
 use birthday_greetings_kata_rust::greetings::{
     greeting::Greeting,
     greetings_sender::{GreetingsSender, SendGreetingsError, SendSingleGreetingError},
-    log_greetings_sender::LogGreeringsSender,
+    log_greetings_sender::LogGreetingsSender,
 };
 use log::Level;
 extern crate testing_logger;
@@ -36,7 +36,7 @@ impl GreetingsSender for GreetingsSenderTestDouble {
 fn log_info_sent_greetings() {
     testing_logger::setup();
     let greetings_sender = Rc::new(GreetingsSenderTestDouble::new());
-    let log_greetings_sender = LogGreeringsSender::new(Rc::clone(&greetings_sender));
+    let log_greetings_sender = LogGreetingsSender::new(Rc::clone(&greetings_sender));
 
     greetings_sender.stub_sent_greetings_result(Ok(()));
 
@@ -60,7 +60,7 @@ fn log_info_sent_greetings() {
 fn log_info_only_sent_greetings() {
     testing_logger::setup();
     let greetings_sender = Rc::new(GreetingsSenderTestDouble::new());
-    let log_greetings_sender = LogGreeringsSender::new(Rc::clone(&greetings_sender));
+    let log_greetings_sender = LogGreetingsSender::new(Rc::clone(&greetings_sender));
 
     let no_sent_greeting = Greeting::new("Carla", "Sandri", "carla@sandri.com", "3334445550");
     let sent_greeting = Greeting::new("Mario", "Verdi", "mario@verdi.com", "3336667770");
@@ -85,7 +85,7 @@ fn log_info_only_sent_greetings() {
 fn log_error_no_sent_greetings() {
     testing_logger::setup();
     let greetings_sender = Rc::new(GreetingsSenderTestDouble::new());
-    let log_greetings_sender = LogGreeringsSender::new(Rc::clone(&greetings_sender));
+    let log_greetings_sender = LogGreetingsSender::new(Rc::clone(&greetings_sender));
     let greetings = vec![
         Greeting::new("Carla", "Sandri", "carla@sandri.com", "3334445550"),
         Greeting::new("Mario", "Verdi", "mario@verdi.com", "3336667770"),
@@ -124,7 +124,7 @@ fn log_error_no_sent_greetings() {
 fn log_error_only_no_sent_greetings() {
     testing_logger::setup();
     let greetings_sender = Rc::new(GreetingsSenderTestDouble::new());
-    let log_greetings_sender = LogGreeringsSender::new(Rc::clone(&greetings_sender));
+    let log_greetings_sender = LogGreetingsSender::new(Rc::clone(&greetings_sender));
     let greetings = vec![
         Greeting::new("Carla", "Sandri", "carla@sandri.com", "3334445550"),
         Greeting::new("Mario", "Verdi", "mario@verdi.com", "3336667770"),
