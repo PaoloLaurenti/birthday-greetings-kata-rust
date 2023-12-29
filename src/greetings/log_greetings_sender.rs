@@ -17,10 +17,8 @@ impl LogGreetingsSender {
 }
 
 impl GreetingsSender for LogGreetingsSender {
-    fn send(&self, _greetings: Vec<super::greeting::Greeting>) {}
-
-    fn send2(&self, greetings: Vec<Greeting>) -> Result<(), SendGreetingsError> {
-        let send_result = self.greetings_sender.send2(greetings.clone());
+    fn send(&self, greetings: Vec<Greeting>) -> Result<(), SendGreetingsError> {
+        let send_result = self.greetings_sender.send(greetings.clone());
         let no_sent_greetings = match send_result.clone() {
             Ok(_) => Vec::new(),
             Err(send_greetings_error) => send_greetings_error.greetings_not_sent,

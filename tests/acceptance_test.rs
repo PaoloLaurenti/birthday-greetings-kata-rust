@@ -5,8 +5,10 @@ use birthday_greetings_kata_rust::{
         emails::{email::Email, email_greetings_sender::EmailGreetingsSender, mailer::Mailer},
         greetings_sender::GreetingsSender,
         greetings_sender_announcer::GreetingsSenderAnnouncer,
+        log_greetings_sender::LogGreetingsSender,
         smss::{sms::Sms, sms_greetings_sender::SmsGreetingsSender, sms_service::SmsService},
-    }, log_observer::LogObserver,
+    },
+    log_observer::LogObserver,
 };
 use chrono::NaiveDate;
 use log::Level;
@@ -102,11 +104,14 @@ fn send_greetings_via_email_and_sms() -> Result<()> {
         Rc::new(SmsGreetingsSender::new(Rc::clone(&sms_service_test_double)));
     let senders: Vec<Rc<dyn GreetingsSender>> = vec![email_greetings_sender, sms_greetings_sender];
     let greetings_sender_announcer = Rc::new(GreetingsSenderAnnouncer::new(senders));
+    let log_greetings_sender = Rc::new(LogGreetingsSender::new(Rc::clone(
+        &greetings_sender_announcer,
+    )));
 
     let mut greeter = GreeterService::new(
         Rc::clone(&flat_file_friends_gateway),
         calendar,
-        Rc::clone(&greetings_sender_announcer),
+        Rc::clone(&log_greetings_sender),
     );
     let observer = Rc::new(LogObserver::default());
     greeter.configure_observer(Rc::clone(&observer));
@@ -139,19 +144,23 @@ fn send_greetings_via_email_and_sms() -> Result<()> {
             Sms::new("3334445551", "3396665559", "Happy birthday, dear Mary!")
         ]
     );
-    
+
     testing_logger::validate(|captured_logs| {
-      assert_eq!(captured_logs.len(), 2);
-      assert_eq!(
-          captured_logs[0].body,
-          "Franco Franchi celebreting her birtday on 24/08"
-      );
-      assert_eq!(captured_logs[0].level, Level::Info);
-      assert_eq!(
-          captured_logs[1].body,
-          "Mary Doe celebreting her birtday on 24/08"
-      );
-      assert_eq!(captured_logs[1].level, Level::Info);
-  });
+        assert_eq!(captured_logs.len(), 4);
+        assert_eq!(
+            captured_logs[0].body,
+            "Franco Franchi celebreting her birtday on 24/08"
+        );
+        assert_eq!(captured_logs[0].level, Level::Info);
+        assert_eq!(
+            captured_logs[1].body,
+            "Mary Doe celebreting her birtday on 24/08"
+        );
+        assert_eq!(captured_logs[1].level, Level::Info);
+        assert_eq!(captured_logs[2].body, "Greeting sent to Franco Franchi");
+        assert_eq!(captured_logs[2].level, Level::Info);
+        assert_eq!(captured_logs[3].body, "Greeting sent to Mary Doe");
+        assert_eq!(captured_logs[3].level, Level::Info);
+    });
     Ok(())
 }

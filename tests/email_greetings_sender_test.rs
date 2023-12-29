@@ -37,7 +37,7 @@ fn send_greetings_as_email() {
         Greeting::new("Franco", "Franchi", "franco@franchi.com", "3334445550"),
         Greeting::new("Mary", "Doe", "mary@doe.com", "3336667770"),
     ];
-    email_greetings_sender.send(greetings);
+    let _ = email_greetings_sender.send(greetings);
 
     let emails = mailer_test_double.spied_emails_to_send();
     assert_eq!(
@@ -64,7 +64,7 @@ fn does_not_send_anything_when_asked_to_send_no_greeting() {
     let mailer_test_double = Rc::new(MailerTestDouble::new());
     let email_greetings_sender = EmailGreetingsSender::new(Rc::clone(&mailer_test_double));
 
-    email_greetings_sender.send(Vec::new());
+    let _ = email_greetings_sender.send(Vec::new());
 
     let emails = mailer_test_double.spied_emails_to_send();
     assert_eq!(emails, Vec::new())

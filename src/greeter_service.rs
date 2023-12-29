@@ -67,7 +67,9 @@ impl GreeterService {
             .iter()
             .map(|f| Greeting::new(&f.name, &f.surname, &f.email, &f.phone_number))
             .collect();
-        self.greetings_sender.send(greetings);
+
+        // This should be handled properly...
+        let _ = self.greetings_sender.send(greetings);
     }
 
     pub fn configure_observer(&mut self, observer: Rc<impl Observer + 'static>) {
@@ -147,8 +149,12 @@ mod tests {
     }
 
     impl GreetingsSender for GreetingsSenderTestDouble {
-        fn send(&self, greetings: Vec<Greeting>) {
-            self.sent_greetings.borrow_mut().extend(greetings)
+        fn send(
+            &self,
+            greetings: Vec<Greeting>,
+        ) -> Result<(), crate::greetings::greetings_sender::SendGreetingsError> {
+            self.sent_greetings.borrow_mut().extend(greetings);
+            Ok(())
         }
     }
 

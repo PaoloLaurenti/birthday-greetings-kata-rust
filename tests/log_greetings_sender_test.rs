@@ -25,9 +25,7 @@ impl GreetingsSenderTestDouble {
 }
 
 impl GreetingsSender for GreetingsSenderTestDouble {
-    fn send(&self, _greetings: Vec<Greeting>) {}
-
-    fn send2(&self, _greetings: Vec<Greeting>) -> Result<(), SendGreetingsError> {
+    fn send(&self, _greetings: Vec<Greeting>) -> Result<(), SendGreetingsError> {
         self.sent_greetings_result.borrow().clone()
     }
 }
@@ -44,7 +42,7 @@ fn log_info_sent_greetings() {
         Greeting::new("Carla", "Sandri", "carla@sandri.com", "3334445550"),
         Greeting::new("Mario", "Verdi", "mario@verdi.com", "3336667770"),
     ];
-    let send_result = log_greetings_sender.send2(greetings);
+    let send_result = log_greetings_sender.send(greetings);
 
     assert!(matches!(send_result, Ok(())));
     testing_logger::validate(|captured_logs| {
@@ -71,7 +69,7 @@ fn log_info_only_sent_greetings() {
     )]);
     greetings_sender.stub_sent_greetings_result(Err(send_greetings_error.clone()));
 
-    let send_result = log_greetings_sender.send2(vec![no_sent_greeting, sent_greeting]);
+    let send_result = log_greetings_sender.send(vec![no_sent_greeting, sent_greeting]);
 
     assert_eq!(send_result, Err(send_greetings_error));
     testing_logger::validate(|captured_logs| {
@@ -102,7 +100,7 @@ fn log_error_no_sent_greetings() {
     ]);
     greetings_sender.stub_sent_greetings_result(Err(send_greetings_error.clone()));
 
-    let send_result = log_greetings_sender.send2(greetings);
+    let send_result = log_greetings_sender.send(greetings);
 
     assert_eq!(send_result, Err(send_greetings_error));
     testing_logger::validate(|captured_logs| {
@@ -135,7 +133,7 @@ fn log_error_only_no_sent_greetings() {
     )]);
     greetings_sender.stub_sent_greetings_result(Err(send_greetings_error.clone()));
 
-    let send_result = log_greetings_sender.send2(greetings);
+    let send_result = log_greetings_sender.send(greetings);
 
     assert_eq!(send_result, Err(send_greetings_error));
     testing_logger::validate(|captured_logs| {

@@ -1,7 +1,8 @@
 use std::{cell::RefCell, rc::Rc};
 
 use birthday_greetings_kata_rust::greetings::{
-    greeting::Greeting, greetings_sender::GreetingsSender,
+    greeting::Greeting,
+    greetings_sender::{GreetingsSender, SendGreetingsError},
     greetings_sender_announcer::GreetingsSenderAnnouncer,
 };
 
@@ -22,8 +23,9 @@ impl GreetingsSenderTestDouble {
 }
 
 impl GreetingsSender for GreetingsSenderTestDouble {
-    fn send(&self, greetings: Vec<Greeting>) {
-        self.sent_greetings.borrow_mut().extend(greetings)
+    fn send(&self, greetings: Vec<Greeting>) -> Result<(), SendGreetingsError> {
+        self.sent_greetings.borrow_mut().extend(greetings);
+        Ok(())
     }
 }
 
@@ -41,7 +43,7 @@ fn send_greetings_using_all_the_given_greetings_senders() {
         Greeting::new("Franco", "Franchi", "franco@franchi.com", "3398889990"),
         Greeting::new("Mary", "Doe", "mary@doe.com", "3396665559"),
     ];
-    greetings_sender_announcer.send(greetings.clone());
+    let _ = greetings_sender_announcer.send(greetings.clone());
 
     assert_eq!(&greetings, &(greetings_sender_1.spied_sent_greetings()));
     assert_eq!(&greetings, &(greetings_sender_2.spied_sent_greetings()));
@@ -57,7 +59,7 @@ fn does_not_send_anything_when_asked_to_send_no_greeting() {
         Rc::clone(&greetings_sender_2),
     ]);
 
-    greetings_sender_announcer.send(Vec::new());
+    let _ = greetings_sender_announcer.send(Vec::new());
 
     assert_eq!(
         Vec::<Greeting>::new(),

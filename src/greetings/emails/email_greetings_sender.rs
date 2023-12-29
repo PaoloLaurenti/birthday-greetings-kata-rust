@@ -14,7 +14,10 @@ impl EmailGreetingsSender {
 }
 
 impl GreetingsSender for EmailGreetingsSender {
-    fn send(&self, greetings: Vec<Greeting>) {
+    fn send(
+        &self,
+        greetings: Vec<Greeting>,
+    ) -> Result<(), crate::greetings::greetings_sender::SendGreetingsError> {
         let emails: Vec<Email> = greetings
             .iter()
             .map(|g| {
@@ -26,6 +29,9 @@ impl GreetingsSender for EmailGreetingsSender {
                 )
             })
             .collect();
+
+        // Mailer send failures should be handled properly
         self.mailer.send(emails);
+        Ok(())
     }
 }

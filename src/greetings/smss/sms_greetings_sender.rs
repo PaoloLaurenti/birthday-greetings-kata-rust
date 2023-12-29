@@ -14,7 +14,10 @@ impl SmsGreetingsSender {
 }
 
 impl GreetingsSender for SmsGreetingsSender {
-    fn send(&self, greetings: Vec<Greeting>) {
+    fn send(
+        &self,
+        greetings: Vec<Greeting>,
+    ) -> Result<(), crate::greetings::greetings_sender::SendGreetingsError> {
         let emails: Vec<Sms> = greetings
             .iter()
             .map(|g| {
@@ -25,6 +28,9 @@ impl GreetingsSender for SmsGreetingsSender {
                 )
             })
             .collect();
+
+        // SMS service send failures should be handled properly
         self.sms_service.send(emails);
+        Ok(())
     }
 }

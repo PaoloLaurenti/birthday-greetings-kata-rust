@@ -1,10 +1,7 @@
 use super::greeting::Greeting;
 
 pub trait GreetingsSender {
-    fn send(&self, greetings: Vec<Greeting>);
-    fn send2(&self, _greetings: Vec<Greeting>) -> Result<(), SendGreetingsError> {
-        Ok(())
-    }
+    fn send(&self, _greetings: Vec<Greeting>) -> Result<(), SendGreetingsError>;
 }
 
 #[derive(Debug, Clone, PartialEq)]

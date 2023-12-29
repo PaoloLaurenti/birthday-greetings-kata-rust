@@ -36,7 +36,7 @@ fn send_greetings_as_sms() {
         Greeting::new("Franco", "Franchi", "franco@franchi.com", "3398889990"),
         Greeting::new("Mary", "Doe", "mary@doe.com", "3396665559"),
     ];
-    sms_greetings_sender.send(greetings);
+    let _ = sms_greetings_sender.send(greetings);
 
     let sms = sms_service_test_double.spied_sms_to_send();
     assert_eq!(
@@ -53,7 +53,7 @@ fn does_not_send_anything_when_asked_to_send_no_greeting() {
     let sms_service_test_double = Rc::new(SmsServiceTestDouble::new());
     let sms_greetings_sender = SmsGreetingsSender::new(Rc::clone(&sms_service_test_double));
 
-    sms_greetings_sender.send(Vec::new());
+    let _ = sms_greetings_sender.send(Vec::new());
 
     let emails = sms_service_test_double.spied_sms_to_send();
     assert_eq!(emails, Vec::new())

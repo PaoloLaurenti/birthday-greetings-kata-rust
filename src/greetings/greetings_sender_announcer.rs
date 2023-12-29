@@ -12,9 +12,15 @@ impl<T: GreetingsSender + ?Sized> GreetingsSenderAnnouncer<T> {
 }
 
 impl<T: GreetingsSender + ?Sized> GreetingsSender for GreetingsSenderAnnouncer<T> {
-    fn send(&self, greetings: Vec<super::greeting::Greeting>) {
+    fn send(
+        &self,
+        greetings: Vec<super::greeting::Greeting>,
+    ) -> Result<(), super::greetings_sender::SendGreetingsError> {
         self.greetings_senders.iter().for_each(|sender| {
-            sender.send(greetings.clone());
+            let _ = sender.send(greetings.clone());
         });
+
+        // Here should be implemented a proper way to aggregate send potential errors
+        Ok(())
     }
 }
