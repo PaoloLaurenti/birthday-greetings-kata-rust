@@ -6,9 +6,10 @@ use birthday_greetings_kata_rust::{
         greetings_sender::GreetingsSender,
         greetings_sender_announcer::GreetingsSenderAnnouncer,
         smss::{sms::Sms, sms_greetings_sender::SmsGreetingsSender, sms_service::SmsService},
-    },
+    }, log_observer::LogObserver,
 };
 use chrono::NaiveDate;
+use log::Level;
 use std::io::Write;
 use std::rc::Rc;
 use std::{cell::RefCell, io::Result};
@@ -76,6 +77,7 @@ impl SmsService for SmsServiceTestDouble {
 
 #[test]
 fn send_greetings_via_email_and_sms() -> Result<()> {
+    testing_logger::setup();
     let mut temp_file = NamedTempFile::new()?;
     writeln!(
         temp_file,
@@ -101,11 +103,13 @@ fn send_greetings_via_email_and_sms() -> Result<()> {
     let senders: Vec<Rc<dyn GreetingsSender>> = vec![email_greetings_sender, sms_greetings_sender];
     let greetings_sender_announcer = Rc::new(GreetingsSenderAnnouncer::new(senders));
 
-    let greeter = GreeterService::new(
+    let mut greeter = GreeterService::new(
         Rc::clone(&flat_file_friends_gateway),
         calendar,
         Rc::clone(&greetings_sender_announcer),
     );
+    let observer = Rc::new(LogObserver::default());
+    greeter.configure_observer(Rc::clone(&observer));
     greeter.run();
 
     let emails = mailer_test_double.spied_emails_to_send();
@@ -135,5 +139,19 @@ fn send_greetings_via_email_and_sms() -> Result<()> {
             Sms::new("3334445551", "3396665559", "Happy birthday, dear Mary!")
         ]
     );
+    
+    testing_logger::validate(|captured_logs| {
+      assert_eq!(captured_logs.len(), 2);
+      assert_eq!(
+          captured_logs[0].body,
+          "Franco Franchi celebreting her birtday on 24/08"
+      );
+      assert_eq!(captured_logs[0].level, Level::Info);
+      assert_eq!(
+          captured_logs[1].body,
+          "Mary Doe celebreting her birtday on 24/08"
+      );
+      assert_eq!(captured_logs[1].level, Level::Info);
+  });
     Ok(())
 }
